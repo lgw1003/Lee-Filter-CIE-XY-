@@ -36,13 +36,13 @@
             list-style-type: none;
             padding: 0;
             margin: 0;
-            border: 3px solid #000;
+            border: 1px solid #bbb;
             max-height: none;
             height: auto;
         }
         #resultList li {
             padding: 10px;
-            border-bottom: 3px solid #000;
+            border-bottom: 1px solid #ccc;
             cursor: pointer;
         }
         #resultList li:hover {
@@ -66,7 +66,7 @@
         #tungstenColor, #daylightColor, #layerTungstenColor, #layerDaylightColor {
             width: 100px;
             height: 100px;
-            border: 3px solid #000;
+            border: 1px solid #ccc;
         }
         .close-button {
             background-color: #ff4d4d;
@@ -106,7 +106,7 @@
             background-color: #f9f9f9;
         }
         .coordinate-group {
-            border: 3px solid #000;
+            border: 2px solid #999;
             padding: 15px;
             border-radius: 5px;
             margin-top: 15px;
@@ -115,7 +115,25 @@
             margin-top: 0;
         }
         .coordinate-value {
-            font-size: 22px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .coordinate-value span {
+            border-bottom: 4px solid #ffcc00;
+        }
+        .coordinate-divider {
+            border-bottom: 4px solid #ffcc00;
+            margin: 10px 0;
+        }
+        .tungsten-value {
+            color: #ff8800; /* 텅스텐 색상 */
+        }
+        .daylight-value {
+            color: #007bff; /* 데이라이트 색상 */
+        }
+        .xy-divider {
+            border-bottom: 2px dashed #000;
+            margin: 10px 0;
         }
     </style>
 </head>
@@ -130,16 +148,18 @@
             <p>필터 이름: <span id="filterName"></span></p>
             <div class="coordinate-group">
                 <h3>텅스텐 (Tungsten)</h3>
-                <p class="coordinate-value">x 좌표 (텅스텐): <span id="filterTungstenX"></span></p>
-                <p class="coordinate-value">y 좌표 (텅스텐): <span id="filterTungstenY"></span></p>
+                <p class="coordinate-value">x 좌표: <span id="filterTungstenX" class="tungsten-value"></span></p>
+                <p class="xy-divider"></p>
+                <p class="coordinate-value">y 좌표: <span id="filterTungstenY" class="tungsten-value"></span></p>
                 <div id="tungstenColor"></div>
                 <button class="rgb-view-button" onclick="toggleRGBViewBelow('tungstenRGBValues')">RGB 값 보기/닫기</button>
                 <div id="tungstenRGBValues" class="hidden rgb-values-container"></div>
             </div>
             <div class="coordinate-group">
                 <h3>데이라이트 (Daylight)</h3>
-                <p class="coordinate-value">x 좌표 (데이라이트): <span id="filterDaylightX"></span></p>
-                <p class="coordinate-value">y 좌표 (데이라이트): <span id="filterDaylightY"></span></p>
+                <p class="coordinate-value">x 좌표: <span id="filterDaylightX" class="daylight-value"></span></p>
+                <p class="xy-divider"></p>
+                <p class="coordinate-value">y 좌표: <span id="filterDaylightY" class="daylight-value"></span></p>
                 <div id="daylightColor"></div>
                 <button class="rgb-view-button" onclick="toggleRGBViewBelow('daylightRGBValues')">RGB 값 보기/닫기</button>
                 <div id="daylightRGBValues" class="hidden rgb-values-container"></div>
@@ -156,16 +176,18 @@
                 <h4>계산 결과:</h4>
                 <div class="coordinate-group">
                     <h3>텅스텐 (Tungsten)</h3>
-                    <p class="coordinate-value">새로운 x 좌표: <span id="layerTungstenX"></span></p>
-                    <p class="coordinate-value">새로운 y 좌표: <span id="layerTungstenY"></span></p>
+                    <p class="coordinate-value">새로운 x 좌표: <span id="layerTungstenX" class="tungsten-value"></span></p>
+                    <p class="xy-divider"></p>
+                    <p class="coordinate-value">새로운 y 좌표: <span id="layerTungstenY" class="tungsten-value"></span></p>
                     <div id="layerTungstenColor"></div>
                     <button class="rgb-view-button" onclick="toggleRGBViewBelow('layerTungstenRGBValues')">계산된 RGB 값 보기/닫기</button>
                     <div id="layerTungstenRGBValues" class="hidden rgb-values-container"></div>
                 </div>
                 <div class="coordinate-group">
                     <h3>데이라이트 (Daylight)</h3>
-                    <p class="coordinate-value">새로운 x 좌표: <span id="layerDaylightX"></span></p>
-                    <p class="coordinate-value">새로운 y 좌표: <span id="layerDaylightY"></span></p>
+                    <p class="coordinate-value">새로운 x 좌표: <span id="layerDaylightX" class="daylight-value"></span></p>
+                    <p class="xy-divider"></p>
+                    <p class="coordinate-value">새로운 y 좌표: <span id="layerDaylightY" class="daylight-value"></span></p>
                     <div id="layerDaylightColor"></div>
                     <button class="rgb-view-button" onclick="toggleRGBViewBelow('layerDaylightRGBValues')">계산된 RGB 값 보기/닫기</button>
                     <div id="layerDaylightRGBValues" class="hidden rgb-values-container"></div>
