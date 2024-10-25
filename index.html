@@ -34,14 +34,17 @@
             margin-bottom: 20px;
             font-size: 16px;
         }
-        #resultList {
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
-            border: 1px solid #ccc;
-            max-height: 150px;
-            overflow-y: auto;
-        }
+#resultList {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    border: 1px solid #ccc;
+    /* 최대 높이를 제거하여 스크롤을 없앱니다 */
+    max-height: none;  
+    /* 높이를 조정하여 모든 결과가 보이게 합니다 */
+    height: auto;  
+}
+
         #resultList li {
             padding: 10px;
             border-bottom: 1px solid #eee;
