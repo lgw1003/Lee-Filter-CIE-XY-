@@ -3690,6 +3690,9 @@
         function showFilterDetails(filter) {
             if (!filter) return;
 
+            // 검색 결과 숨기기
+            document.getElementById('resultList').innerHTML = '';
+
             document.getElementById('filterDetails').classList.remove('hidden');
             document.getElementById('filterName').textContent = filter.name;
             document.getElementById('filterTungstenX').textContent = roundToTwo(filter.tungsten.x);
