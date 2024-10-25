@@ -5,11 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>필터 검색 및 계산기</title>
     <link rel="stylesheet" href="styles.css">
-    <!-- 아이콘 링크 추가 -->
     <link rel="icon" href="icon-192x192.png" sizes="192x192" />
     <link rel="apple-touch-icon" href="icon-512x512.png" sizes="512x512" />
     <style>
-        /* CSS 스타일 코드 여기에 추가 */
         body {
             font-family: Arial, sans-serif;
             display: flex;
@@ -34,17 +32,14 @@
             margin-bottom: 20px;
             font-size: 16px;
         }
-#resultList {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-    border: 1px solid #ccc;
-    /* 최대 높이를 제거하여 스크롤을 없앱니다 */
-    max-height: none;  
-    /* 높이를 조정하여 모든 결과가 보이게 합니다 */
-    height: auto;  
-}
-
+        #resultList {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            border: 1px solid #ccc;
+            max-height: none;
+            height: auto;
+        }
         #resultList li {
             padding: 10px;
             border-bottom: 1px solid #eee;
@@ -68,6 +63,11 @@
         .download-button:hover {
             background-color: #0056b3;
         }
+        #tungstenColor, #daylightColor {
+            width: 100px;  /* 색상 박스 너비 */
+            height: 100px; /* 색상 박스 높이 */
+            border: 1px solid #ccc; /* 경계선 */
+        }
     </style>
 </head>
 <body>
@@ -83,11 +83,13 @@
                 <h3>텅스텐 (Tungsten)</h3>
                 <p>x 좌표 (텅스텐): <span id="filterTungstenX"></span></p>
                 <p>y 좌표 (텅스텐): <span id="filterTungstenY"></span></p>
+                <div style="width: 100px; height: 100px; background-color: rgb(255, 0, 0);" id="tungstenColor"></div>
             </div>
             <div class="coordinates">
                 <h3>데이라이트 (Daylight)</h3>
                 <p>x 좌표 (데이라이트): <span id="filterDaylightX"></span></p>
                 <p>y 좌표 (데이라이트): <span id="filterDaylightY"></span></p>
+                <div style="width: 100px; height: 100px; background-color: rgb(0, 0, 255);" id="daylightColor"></div>
             </div>
 
             <h3>겹수에 따른 계산 결과</h3>
@@ -116,6 +118,11 @@
             const resultList = document.getElementById('resultList');
             resultList.innerHTML = '';
 
+            if (!query) {
+                document.getElementById('filterDetails').classList.add('hidden');
+                return; // 함수 종료
+            }
+
             const filtered = filters.filter(f => 
                 f.name.toLowerCase().includes(query) || f.number.toString().includes(query)
             );
@@ -129,6 +136,8 @@
         });
 
         function showFilterDetails(filter) {
+            if (!filter) return; // 필터가 없으면 아무 것도 표시하지 않음
+
             document.getElementById('filterDetails').classList.remove('hidden');
             document.getElementById('filterName').textContent = filter.name;
             document.getElementById('filterTungstenX').textContent = roundToTwo(filter.tungsten.x);
@@ -136,13 +145,24 @@
             document.getElementById('filterDaylightX').textContent = roundToTwo(filter.daylight.x);
             document.getElementById('filterDaylightY').textContent = roundToTwo(filter.daylight.y);
 
+            // 색상 박스 업데이트
+            document.getElementById('tungstenColor').style.backgroundColor = getColorFromXY(filter.tungsten.x, filter.tungsten.y);
+            document.getElementById('daylightColor').style.backgroundColor = getColorFromXY(filter.daylight.x, filter.daylight.y);
+
             window.selectedFilter = filter;
+        }
+
+        function getColorFromXY(x, y) {
+            const r = Math.round(x * 255);
+            const g = Math.round(y * 255);
+            const b = Math.round((1 - x - y) * 255);
+            return `rgb(${r}, ${g}, ${b})`;
         }
 
         function calculateLayers(layers) {
             const filter = window.selectedFilter;
             const transmission = Math.pow(filter.transmission, layers);
-
+            
             const shiftFactorTungsten = (filter.transmission - transmission) / filter.transmission;
             const shiftFactorDaylight = (filter.transmission - transmission) / filter.transmission;
 
@@ -151,28 +171,18 @@
             const deltaXDaylight = filter.daylight.x - 0.33;
             const deltaYDaylight = filter.daylight.y - 0.33;
 
-            const resultXTungsten = filter.tungsten.x + (deltaXTungsten * shiftFactorTungsten);
-            const resultYTungsten = filter.tungsten.y + (deltaYTungsten * shiftFactorTungsten);
-            const resultXDaylight = filter.daylight.x + (deltaXDaylight * shiftFactorDaylight);
-            const resultYDaylight = filter.daylight.y + (deltaYDaylight * shiftFactorDaylight);
+            const resultXTungsten = roundToTwo(filter.tungsten.x + (deltaXTungsten * shiftFactorTungsten));
+            const resultYTungsten = roundToTwo(filter.tungsten.y + (deltaYTungsten * shiftFactorTungsten));
+            const resultXDaylight = roundToTwo(filter.daylight.x + (deltaXDaylight * shiftFactorDaylight));
+            const resultYDaylight = roundToTwo(filter.daylight.y + (deltaYDaylight * shiftFactorDaylight));
 
             document.getElementById('layerResults').classList.remove('hidden');
             document.getElementById('layerTransmission').textContent = (transmission * 100).toFixed(2) + '%';
-            document.getElementById('layerX').textContent = roundToTwo(resultXTungsten);
-            document.getElementById('layerY').textContent = roundToTwo(resultYTungsten);
-            document.getElementById('layerDaylightX').textContent = roundToTwo(resultXDaylight);
-            document.getElementById('layerDaylightY').textContent = roundToTwo(resultYDaylight);
+            document.getElementById('layerX').textContent = resultXTungsten;
+            document.getElementById('layerY').textContent = resultYTungsten;
+            document.getElementById('layerDaylightX').textContent = resultXDaylight;
+            document.getElementById('layerDaylightY').textContent = resultYDaylight;
         }
-
-        document.getElementById('downloadButton').addEventListener('click', function() {
-            const element = document.createElement('a');
-            const file = new Blob([document.documentElement.outerHTML], { type: 'text/html' });
-            element.href = URL.createObjectURL(file);
-            element.download = '필터_검색_계산기.html';
-            document.body.appendChild(element);
-            element.click();
-            document.body.removeChild(element);
-        });
     </script>
 </body>
 </html>
