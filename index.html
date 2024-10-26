@@ -186,7 +186,7 @@
                 <p class="xy-divider"></p>
                 <p class="coordinate-value">y 좌표: <span id="filterTungstenY" class="tungsten-value"></span></p>
                 <div id="tungstenColor"></div>
-                <button class="rgb-view-button" onclick="toggleRGBViewBelow('tungstenRGBValues')">RGB 값 보기/닫기</button>
+                <button class="rgb-view-button" onclick="toggleRGBViewBelow('tungstenRGBValues')">RGB/HSV 값 보기/닫기</button>
                 <div id="tungstenRGBValues" class="hidden rgb-values-container"></div>
             </div>
             <div class="coordinate-group">
@@ -195,7 +195,7 @@
                 <p class="xy-divider"></p>
                 <p class="coordinate-value">y 좌표: <span id="filterDaylightY" class="daylight-value"></span></p>
                 <div id="daylightColor"></div>
-                <button class="rgb-view-button" onclick="toggleRGBViewBelow('daylightRGBValues')">RGB 값 보기/닫기</button>
+                <button class="rgb-view-button" onclick="toggleRGBViewBelow('daylightRGBValues')">RGB/HSV 값 보기/닫기</button>
                 <div id="daylightRGBValues" class="hidden rgb-values-container"></div>
             </div>
 
@@ -214,7 +214,7 @@
                     <p class="xy-divider"></p>
                     <p class="coordinate-value">새로운 y 좌표: <span id="layerTungstenY" class="tungsten-value"></span></p>
                     <div id="layerTungstenColor"></div>
-                    <button class="rgb-view-button" onclick="toggleRGBViewBelow('layerTungstenRGBValues')">계산된 RGB 값 보기/닫기</button>
+                    <button class="rgb-view-button" onclick="toggleRGBViewBelow('layerTungstenRGBValues')">계산된 RGB/HSV 값 보기/닫기</button>
                     <div id="layerTungstenRGBValues" class="hidden rgb-values-container"></div>
                 </div>
                 <div class="coordinate-group">
@@ -223,7 +223,7 @@
                     <p class="xy-divider"></p>
                     <p class="coordinate-value">새로운 y 좌표: <span id="layerDaylightY" class="daylight-value"></span></p>
                     <div id="layerDaylightColor"></div>
-                    <button class="rgb-view-button" onclick="toggleRGBViewBelow('layerDaylightRGBValues')">계산된 RGB 값 보기/닫기</button>
+                    <button class="rgb-view-button" onclick="toggleRGBViewBelow('layerDaylightRGBValues')">계산된 RGB/HSV 값 보기/닫기</button>
                     <div id="layerDaylightRGBValues" class="hidden rgb-values-container"></div>
                 </div>
             </div>
@@ -3835,20 +3835,66 @@
             return `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
         }
 
+        function rgbToHsv(r, g, b) {
+            var var_R = r / 255;
+            var var_G = g / 255;
+            var var_B = b / 255;
+
+            var var_Min = Math.min(var_R, var_G, var_B);
+            var var_Max = Math.max(var_R, var_G, var_B);
+            var del_Max = var_Max - var_Min;
+
+            var v = var_Max;
+            var h = 0;
+            var s = 0;
+
+            if (del_Max !== 0) {
+                s = del_Max / var_Max;
+
+                var del_R = (((var_Max - var_R) / 6) + (del_Max / 2)) / del_Max;
+                var del_G = (((var_Max - var_G) / 6) + (del_Max / 2)) / del_Max;
+                var del_B = (((var_Max - var_B) / 6) + (del_Max / 2)) / del_Max;
+
+                if (var_R === var_Max) {
+                    h = del_B - del_G;
+                } else if (var_G === var_Max) {
+                    h = (1 / 3) + del_R - del_B;
+                } else if (var_B === var_Max) {
+                    h = (2 / 3) + del_G - del_R;
+                }
+
+                if (h < 0) h += 1;
+                if (h > 1) h -= 1;
+            }
+
+            return { h: roundToTwo(h * 360), s: roundToTwo(s * 100), v: roundToTwo(v * 100) };
+        }
+
         function toggleRGBViewBelow(elementId) {
             const element = document.getElementById(elementId);
             if (element.classList.contains('hidden')) {
                 const filter = window.selectedFilter;
                 if (!filter) return;
+                let r, g, b;
                 if (elementId.includes('tungsten')) {
-                    element.textContent = `RGB 값: ${getColorFromXY(filter.tungsten.x, filter.tungsten.y, filter.tungsten.transmission)}`;
+                    const rgb = getColorFromXY(filter.tungsten.x, filter.tungsten.y, filter.tungsten.transmission);
+                    [r, g, b] = rgb.match(/\d+/g).map(Number);
+                    element.innerHTML = `RGB 값: ${rgb}<br>`;
                 } else if (elementId.includes('daylight')) {
-                    element.textContent = `RGB 값: ${getColorFromXY(filter.daylight.x, filter.daylight.y, filter.daylight.transmission)}`;
+                    const rgb = getColorFromXY(filter.daylight.x, filter.daylight.y, filter.daylight.transmission);
+                    [r, g, b] = rgb.match(/\d+/g).map(Number);
+                    element.innerHTML = `RGB 값: ${rgb}<br>`;
                 } else if (elementId.includes('layerTungsten')) {
-                    element.textContent = `RGB 값: ${getColorFromXY(window.layerTungstenX, window.layerTungstenY, filter.tungsten.transmission)}`;
+                    const rgb = getColorFromXY(window.layerTungstenX, window.layerTungstenY, filter.tungsten.transmission);
+                    [r, g, b] = rgb.match(/\d+/g).map(Number);
+                    element.innerHTML = `RGB 값: ${rgb}<br>`;
                 } else if (elementId.includes('layerDaylight')) {
-                    element.textContent = `RGB 값: ${getColorFromXY(window.layerDaylightX, window.layerDaylightY, filter.daylight.transmission)}`;
+                    const rgb = getColorFromXY(window.layerDaylightX, window.layerDaylightY, filter.daylight.transmission);
+                    [r, g, b] = rgb.match(/\d+/g).map(Number);
+                    element.innerHTML = `RGB 값: ${rgb}<br>`;
                 }
+                const hsv = rgbToHsv(r, g, b);
+                element.innerHTML += `HSV 값: H: ${hsv.h}, S: ${hsv.s}%, V: ${hsv.v}%`;
                 element.classList.remove('hidden');
             } else {
                 element.classList.add('hidden');
@@ -3937,9 +3983,8 @@
                 colorPreview.style.backgroundColor = getColorFromXY(filter.tungsten.x, filter.tungsten.y, filter.tungsten.transmission);
                 listItem.appendChild(colorPreview);
                 
-                const filterText = document.createElement('span');
-                filterText.textContent = `${filter.number} - ${filter.name}`;
-                listItem.appendChild(filterText);
+                listItem.textContent = `${filter.number} - ${filter.name}`;
+                listItem.onclick = () => showFilterDetails(filter);
                 
                 const removeButton = document.createElement('button');
                 removeButton.textContent = '-';
