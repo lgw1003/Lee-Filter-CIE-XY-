@@ -39,6 +39,7 @@
             border: 1px solid #bbb;
             max-height: none;
             height: auto;
+            text-align: left;
         }
         #resultList li {
             padding: 10px;
@@ -47,6 +48,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            text-align: left;
         }
         #resultList li:hover {
             background-color: #f5f5f5;
@@ -55,6 +57,11 @@
             width: 20px;
             height: 20px;
             border: 1px solid #ccc;
+            margin-right: 10px;
+        }
+        .color-preview-container {
+            display: flex;
+            gap: 5px;
             margin-right: 10px;
         }
         .hidden {
@@ -158,9 +165,17 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 10px;
+            text-align: left;
         }
-        .favorite-filter .color-preview {
+        .favorite-filter .color-preview-container {
             margin-right: 15px;
+        }
+        .result-tooltip {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 300px;
+            text-align: left;
         }
     </style>
 </head>
@@ -3758,12 +3773,24 @@
 
             filtered.forEach(filter => {
                 const listItem = document.createElement('li');
-                const colorPreview = document.createElement('div');
-                colorPreview.className = 'color-preview';
-                colorPreview.style.backgroundColor = getColorFromXY(filter.tungsten.x, filter.tungsten.y, filter.tungsten.transmission);
-                listItem.appendChild(colorPreview);
+                const colorPreviewContainer = document.createElement('div');
+                colorPreviewContainer.className = 'color-preview-container';
+
+                const tungstenPreview = document.createElement('div');
+                tungstenPreview.className = 'color-preview';
+                tungstenPreview.style.backgroundColor = getColorFromXY(filter.tungsten.x, filter.tungsten.y, filter.tungsten.transmission);
+                colorPreviewContainer.appendChild(tungstenPreview);
+
+                const daylightPreview = document.createElement('div');
+                daylightPreview.className = 'color-preview';
+                daylightPreview.style.backgroundColor = getColorFromXY(filter.daylight.x, filter.daylight.y, filter.daylight.transmission);
+                colorPreviewContainer.appendChild(daylightPreview);
+
+                listItem.appendChild(colorPreviewContainer);
                 const filterText = document.createElement('span');
                 filterText.textContent = `${filter.number} - ${filter.name}`;
+                filterText.className = 'result-tooltip';
+                filterText.setAttribute('title', filter.name);
                 listItem.appendChild(filterText);
 
                 const addButton = document.createElement('button');
@@ -3781,6 +3808,7 @@
                 };
                 
                 const buttonContainer = document.createElement('div');
+                buttonContainer.style.marginLeft = 'auto';
                 buttonContainer.appendChild(addButton);
                 buttonContainer.appendChild(removeButton);
 
@@ -3835,70 +3863,73 @@
             return `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
         }
 
-        function rgbToHsv(r, g, b) {
-            var var_R = r / 255;
-            var var_G = g / 255;
-            var var_B = b / 255;
-
-            var var_Min = Math.min(var_R, var_G, var_B);
-            var var_Max = Math.max(var_R, var_G, var_B);
-            var del_Max = var_Max - var_Min;
-
-            var v = var_Max;
-            var h = 0;
-            var s = 0;
-
-            if (del_Max !== 0) {
-                s = del_Max / var_Max;
-
-                var del_R = (((var_Max - var_R) / 6) + (del_Max / 2)) / del_Max;
-                var del_G = (((var_Max - var_G) / 6) + (del_Max / 2)) / del_Max;
-                var del_B = (((var_Max - var_B) / 6) + (del_Max / 2)) / del_Max;
-
-                if (var_R === var_Max) {
-                    h = del_B - del_G;
-                } else if (var_G === var_Max) {
-                    h = (1 / 3) + del_R - del_B;
-                } else if (var_B === var_Max) {
-                    h = (2 / 3) + del_G - del_R;
-                }
-
-                if (h < 0) h += 1;
-                if (h > 1) h -= 1;
-            }
-
-            return { h: roundToTwo(h * 360), s: roundToTwo(s * 100), v: roundToTwo(v * 100) };
-        }
-
         function toggleRGBViewBelow(elementId) {
             const element = document.getElementById(elementId);
             if (element.classList.contains('hidden')) {
                 const filter = window.selectedFilter;
                 if (!filter) return;
-                let r, g, b;
+                let rgb;
                 if (elementId.includes('tungsten')) {
-                    const rgb = getColorFromXY(filter.tungsten.x, filter.tungsten.y, filter.tungsten.transmission);
-                    [r, g, b] = rgb.match(/\d+/g).map(Number);
-                    element.innerHTML = `RGB 값: ${rgb}<br>`;
+                    rgb = getColorFromXY(filter.tungsten.x, filter.tungsten.y, filter.tungsten.transmission);
+                    element.innerHTML = `RGB 값: ${rgb}<br>HSV 값: ${RGBtoHSV(rgb)}`;
                 } else if (elementId.includes('daylight')) {
-                    const rgb = getColorFromXY(filter.daylight.x, filter.daylight.y, filter.daylight.transmission);
-                    [r, g, b] = rgb.match(/\d+/g).map(Number);
-                    element.innerHTML = `RGB 값: ${rgb}<br>`;
+                    rgb = getColorFromXY(filter.daylight.x, filter.daylight.y, filter.daylight.transmission);
+                    element.innerHTML = `RGB 값: ${rgb}<br>HSV 값: ${RGBtoHSV(rgb)}`;
                 } else if (elementId.includes('layerTungsten')) {
-                    const rgb = getColorFromXY(window.layerTungstenX, window.layerTungstenY, filter.tungsten.transmission);
-                    [r, g, b] = rgb.match(/\d+/g).map(Number);
-                    element.innerHTML = `RGB 값: ${rgb}<br>`;
+                    rgb = getColorFromXY(window.layerTungstenX, window.layerTungstenY, filter.tungsten.transmission);
+                    element.innerHTML = `RGB 값: ${rgb}<br>HSV 값: ${RGBtoHSV(rgb)}`;
                 } else if (elementId.includes('layerDaylight')) {
-                    const rgb = getColorFromXY(window.layerDaylightX, window.layerDaylightY, filter.daylight.transmission);
-                    [r, g, b] = rgb.match(/\d+/g).map(Number);
-                    element.innerHTML = `RGB 값: ${rgb}<br>`;
+                    rgb = getColorFromXY(window.layerDaylightX, window.layerDaylightY, filter.daylight.transmission);
+                    element.innerHTML = `RGB 값: ${rgb}<br>HSV 값: ${RGBtoHSV(rgb)}`;
                 }
-                const hsv = rgbToHsv(r, g, b);
-                element.innerHTML += `HSV 값: H: ${hsv.h}, S: ${hsv.s}%, V: ${hsv.v}%`;
                 element.classList.remove('hidden');
             } else {
                 element.classList.add('hidden');
             }
+        }
+
+        function RGBtoHSV(rgb) {
+            let r, g, b;
+            [r, g, b] = rgb.match(/\d+/g).map(Number);
+
+            let var_R = r / 255;
+            let var_G = g / 255;
+            let var_B = b / 255;
+
+            let var_Min = Math.min(var_R, var_G, var_B);    //Min. value of RGB
+            let var_Max = Math.max(var_R, var_G, var_B);    //Max. value of RGB
+            let del_Max = var_Max - var_Min;                //Delta RGB value
+
+            let H = 0, S, V;
+            V = var_Max;
+
+            if (del_Max == 0) {                    //This is a gray, no chroma...
+                H = 0;
+                S = 0;
+            } else {                               //Chromatic data...
+                S = del_Max / var_Max;
+
+                let del_R = (((var_Max - var_R) / 6) + (del_Max / 2)) / del_Max;
+                let del_G = (((var_Max - var_G) / 6) + (del_Max / 2)) / del_Max;
+                let del_B = (((var_Max - var_B) / 6) + (del_Max / 2)) / del_Max;
+
+                if (var_R == var_Max) {
+                    H = del_B - del_G;
+                } else if (var_G == var_Max) {
+                    H = (1 / 3) + del_R - del_B;
+                } else if (var_B == var_Max) {
+                    H = (2 / 3) + del_G - del_R;
+                }
+
+                if (H < 0) H += 1;
+                if (H > 1) H -= 1;
+            }
+
+            H = Math.round(H * 360);
+            S = Math.round(S * 100);
+            V = Math.round(V * 100);
+
+            return `H: ${H}°, S: ${S}%, V: ${V}%`;
         }
 
         function calculateLayers(layers) {
@@ -3978,13 +4009,26 @@
                 const listItem = document.createElement('li');
                 listItem.className = 'favorite-filter';
                 
-                const colorPreview = document.createElement('div');
-                colorPreview.className = 'color-preview';
-                colorPreview.style.backgroundColor = getColorFromXY(filter.tungsten.x, filter.tungsten.y, filter.tungsten.transmission);
-                listItem.appendChild(colorPreview);
+                const colorPreviewContainer = document.createElement('div');
+                colorPreviewContainer.className = 'color-preview-container';
                 
-                listItem.textContent = `${filter.number} - ${filter.name}`;
-                listItem.onclick = () => showFilterDetails(filter);
+                const tungstenPreview = document.createElement('div');
+                tungstenPreview.className = 'color-preview';
+                tungstenPreview.style.backgroundColor = getColorFromXY(filter.tungsten.x, filter.tungsten.y, filter.tungsten.transmission);
+                colorPreviewContainer.appendChild(tungstenPreview);
+                
+                const daylightPreview = document.createElement('div');
+                daylightPreview.className = 'color-preview';
+                daylightPreview.style.backgroundColor = getColorFromXY(filter.daylight.x, filter.daylight.y, filter.daylight.transmission);
+                colorPreviewContainer.appendChild(daylightPreview);
+                
+                listItem.appendChild(colorPreviewContainer);
+                
+                const filterText = document.createElement('span');
+                filterText.textContent = `${filter.number} - ${filter.name}`;
+                filterText.className = 'result-tooltip';
+                filterText.setAttribute('title', filter.name);
+                listItem.appendChild(filterText);
                 
                 const removeButton = document.createElement('button');
                 removeButton.textContent = '-';
@@ -3992,8 +4036,11 @@
                     e.stopPropagation();
                     removeFromFavorites(filter);
                 };
+                removeButton.style.marginLeft = 'auto';
                 listItem.appendChild(removeButton);
                 favoriteList.appendChild(listItem);
+
+                listItem.onclick = () => showFilterDetails(filter);
             });
         }
 
