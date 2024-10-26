@@ -44,6 +44,9 @@
             padding: 10px;
             border-bottom: 1px solid #ccc;
             cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         #resultList li:hover {
             background-color: #f5f5f5;
@@ -120,6 +123,7 @@
         }
         .coordinate-value span {
             border-bottom: 4px solid #ffcc00;
+            font-weight: bold;
         }
         .coordinate-divider {
             border-bottom: 4px solid #ffcc00;
@@ -127,25 +131,46 @@
         }
         .tungsten-value {
             color: #ff8800; /* 텅스텐 색상 */
+            font-weight: bold;
         }
         .daylight-value {
             color: #007bff; /* 데이라이트 색상 */
+            font-weight: bold;
         }
         .xy-divider {
             border-bottom: 2px dashed #000;
             margin: 10px 0;
         }
+        .favorite-container {
+            margin-top: 20px;
+            border: 2px solid #666;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .favorite-filter {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <div class="favorite-container">
+            <h2>즐겨찾기</h2>
+            <ul id="favoriteList"></ul>
+        </div>
         <h1>LEE 필터 검색 및 계산기</h1>
         <input type="text" id="searchInput" placeholder="필터 이름 또는 번호 검색">
         <ul id="resultList"></ul>
         
         <div id="filterDetails" class="hidden">
             <h2>필터 상세 정보</h2>
-            <p>필터 이름: <span id="filterName"></span></p>
+            <p>필터 이름: <span id="filterName"></span>
+                <button onclick="addToFavorites(window.selectedFilter)">+</button>
+                <button onclick="removeFromFavorites(window.selectedFilter)">-</button>
+            </p>
             <div class="coordinate-group">
                 <h3>텅스텐 (Tungsten)</h3>
                 <p class="coordinate-value">x 좌표: <span id="filterTungstenX" class="tungsten-value"></span></p>
@@ -3701,6 +3726,9 @@
   }
 ];
 
+        const favorites = [];
+        const maxFavorites = 10;
+
         function roundToTwo(num) {
             return Math.round(num * 100) / 100;
         }
@@ -3722,6 +3750,26 @@
             filtered.forEach(filter => {
                 const listItem = document.createElement('li');
                 listItem.textContent = `${filter.number} - ${filter.name}`;
+                
+                const addButton = document.createElement('button');
+                addButton.textContent = '+';
+                addButton.onclick = (e) => {
+                    e.stopPropagation();
+                    addToFavorites(filter);
+                };
+                
+                const removeButton = document.createElement('button');
+                removeButton.textContent = '-';
+                removeButton.onclick = (e) => {
+                    e.stopPropagation();
+                    removeFromFavorites(filter);
+                };
+                
+                const buttonContainer = document.createElement('div');
+                buttonContainer.appendChild(addButton);
+                buttonContainer.appendChild(removeButton);
+
+                listItem.appendChild(buttonContainer);
                 listItem.onclick = () => showFilterDetails(filter);
                 resultList.appendChild(listItem);
             });
@@ -3824,7 +3872,7 @@
             document.getElementById('layerDaylightColor').style.backgroundColor = getColorFromXY(resultXDaylight, resultYDaylight, filter.daylight.transmission);
         }
 
-        function closeLayerResults() {
+        function closeLayerResults() {https://github.com/lgw1003/Lee-Filter-CIE-XY-/blob/main/index.html
             document.getElementById('layerResults').classList.add('hidden');
         }
 
@@ -3840,6 +3888,67 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         });
+
+        function addToFavorites(filter) {
+            if (favorites.length >= maxFavorites) {
+                alert('즐겨찾기는 최대 10개까지 추가할 수 있습니다.');
+                return;
+            }
+            if (!favorites.includes(filter)) {
+                favorites.push(filter);
+                updateFavoriteList();
+                saveFavorites();
+            }
+        }
+
+        function removeFromFavorites(filter) {
+            const index = favorites.indexOf(filter);
+            if (index !== -1) {
+                favorites.splice(index, 1);
+                updateFavoriteList();
+                saveFavorites();
+            }
+        }
+
+        function updateFavoriteList() {
+            const favoriteList = document.getElementById('favoriteList');
+            favoriteList.innerHTML = '';
+            favorites.forEach(filter => {
+                const listItem = document.createElement('li');
+                listItem.className = 'favorite-filter';
+                listItem.textContent = `${filter.number} - ${filter.name}`;
+                listItem.onclick = () => showFilterDetails(filter);
+                
+                const removeButton = document.createElement('button');
+                removeButton.textContent = '-';
+                removeButton.onclick = (e) => {
+                    e.stopPropagation();
+                    removeFromFavorites(filter);
+                };
+                listItem.appendChild(removeButton);
+                favoriteList.appendChild(listItem);
+            });
+        }
+
+        function saveFavorites() {
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+        }
+
+        function loadFavorites() {
+            const savedFavorites = localStorage.getItem('favorites');
+            if (savedFavorites) {
+                const parsedFavorites = JSON.parse(savedFavorites);
+                parsedFavorites.forEach(fav => {
+                    const matchingFilter = filters.find(f => f.number === fav.number);
+                    if (matchingFilter) {
+                        favorites.push(matchingFilter);
+                    }
+                });
+                updateFavoriteList();
+            }
+        }
+
+        loadFavorites();
     </script>
 </body>
 </html>
