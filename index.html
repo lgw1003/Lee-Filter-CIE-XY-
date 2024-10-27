@@ -25,7 +25,25 @@
             max-width: 500px;
             width: 100%;
             margin-top: 20px;
+            .rgb-hsv-value {
+            margin-bottom: 5px;
         }
+
+        .rgb-hsv-value {
+            margin-bottom: 5px;
+        }
+
+        .hsv-value {
+            margin-left: 90px; /* 전체 들여쓰기 설정 */
+        }
+
+        .hsv-entry {
+            margin-bottom: 5px; /* 항목 간의 간격 설정 */
+        }
+        .hsv-inline {
+    margin-left: 10px; /* 각 HSV 요소 간의 간격 설정 */
+    display: inline; /* 한 줄에 표시되도록 설정 */
+}
         #searchInput {
             width: 100%;
             padding: 10px;
@@ -191,10 +209,27 @@
         }
         .favorite-filter span, #resultList li span {
             margin-left: 5px;
-            max-width: 250px;
+            max-width: 300px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+        .notice-button {
+            margin-left: 10px;
+            padding: 5px;
+            background-color: #ffa500;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .notice-button:hover {
+            background-color: #ff8c00;
+        }
+        .rgb-hsv-value {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
         }
     </style>
 </head>
@@ -221,6 +256,7 @@
                 <p class="coordinate-value">y 좌표: <span id="filterTungstenY" class="tungsten-value"></span></p>
                 <div id="tungstenColor"></div>
                 <button class="rgb-view-button" onclick="toggleRGBViewBelow('tungstenRGBValues')">RGB/HSV 값 보기/닫기</button>
+                <button class="notice-button" onclick="showNotice()">주의사항</button>
                 <div id="tungstenRGBValues" class="hidden rgb-values-container"></div>
             </div>
             <div class="coordinate-group">
@@ -230,6 +266,7 @@
                 <p class="coordinate-value">y 좌표: <span id="filterDaylightY" class="daylight-value"></span></p>
                 <div id="daylightColor"></div>
                 <button class="rgb-view-button" onclick="toggleRGBViewBelow('daylightRGBValues')">RGB/HSV 값 보기/닫기</button>
+                <button class="notice-button" onclick="showNotice()">주의사항</button>
                 <div id="daylightRGBValues" class="hidden rgb-values-container"></div>
             </div>
 
@@ -249,6 +286,7 @@
                     <p class="coordinate-value">새로운 y 좌표: <span id="layerTungstenY" class="tungsten-value"></span></p>
                     <div id="layerTungstenColor"></div>
                     <button class="rgb-view-button" onclick="toggleRGBViewBelow('layerTungstenRGBValues')">계산된 RGB/HSV 값 보기/닫기</button>
+                    <button class="notice-button" onclick="showNotice()">주의사항</button>
                     <div id="layerTungstenRGBValues" class="hidden rgb-values-container"></div>
                 </div>
                 <div class="coordinate-group">
@@ -258,6 +296,7 @@
                     <p class="coordinate-value">새로운 y 좌표: <span id="layerDaylightY" class="daylight-value"></span></p>
                     <div id="layerDaylightColor"></div>
                     <button class="rgb-view-button" onclick="toggleRGBViewBelow('layerDaylightRGBValues')">계산된 RGB/HSV 값 보기/닫기</button>
+                    <button class="notice-button" onclick="showNotice()">주의사항</button>
                     <div id="layerDaylightRGBValues" class="hidden rgb-values-container"></div>
                 </div>
             </div>
@@ -3768,7 +3807,6 @@
     }
   }
 ];
-
         const favorites = [];
         const maxFavorites = 10;
 
@@ -3851,8 +3889,26 @@
             document.getElementById('tungstenColor').style.backgroundColor = getColorFromXY(filter.tungsten.x, filter.tungsten.y, filter.tungsten.transmission);
             document.getElementById('daylightColor').style.backgroundColor = getColorFromXY(filter.daylight.x, filter.daylight.y, filter.daylight.transmission);
 
+            updateRGBValues('tungstenRGBValues', filter.tungsten);
+            updateRGBValues('daylightRGBValues', filter.daylight);
+
             window.selectedFilter = filter;
         }
+
+        function updateRGBValues(elementId, colorData) {
+    const element = document.getElementById(elementId);
+    const rgb = getColorFromXY(colorData.x, colorData.y, colorData.transmission);
+    const hsv = RGBtoHSV(rgb);
+    element.innerHTML = `
+        <div class="rgb-hsv-value">📊 RGB 값: ${rgb}</div>
+        <div class="rgb-hsv-value">🎨 HSV 값: -------------</div>
+        <div class="hsv-value">
+            H: ${hsv.h}°<br>
+            S: ${hsv.s}%<br>
+            V: ${hsv.v}%
+        </div>`;
+}
+
 
         function getColorFromXY(x, y, transmission) {
             // Transmission Y값을 퍼센트로 변환
@@ -3889,17 +3945,15 @@
                 if (!filter) return;
                 let rgb;
                 if (elementId.includes('tungsten')) {
-                    rgb = getColorFromXY(filter.tungsten.x, filter.tungsten.y, filter.tungsten.transmission);
-                    element.innerHTML = `RGB 값: ${rgb}<br>HSV 값: ${RGBtoHSV(rgb)}`;
+                    updateRGBValues(elementId, filter.tungsten);
                 } else if (elementId.includes('daylight')) {
-                    rgb = getColorFromXY(filter.daylight.x, filter.daylight.y, filter.daylight.transmission);
-                    element.innerHTML = `RGB 값: ${rgb}<br>HSV 값: ${RGBtoHSV(rgb)}`;
+                    updateRGBValues(elementId, filter.daylight);
                 } else if (elementId.includes('layerTungsten')) {
                     rgb = getColorFromXY(window.layerTungstenX, window.layerTungstenY, filter.tungsten.transmission);
-                    element.innerHTML = `RGB 값: ${rgb}<br>HSV 값: ${RGBtoHSV(rgb)}`;
+                    element.innerHTML = `<div class="rgb-hsv-value">📊 RGB 값: ${rgb}</div><div class="rgb-hsv-value">🎨 HSV 값:<br>&nbsp;&nbsp;&nbsp;&nbsp;H: ${RGBtoHSV(rgb).h}°<br>&nbsp;&nbsp;&nbsp;&nbsp;S: ${RGBtoHSV(rgb).s}%<br>&nbsp;&nbsp;&nbsp;&nbsp;V: ${RGBtoHSV(rgb).v}%</div>`;
                 } else if (elementId.includes('layerDaylight')) {
                     rgb = getColorFromXY(window.layerDaylightX, window.layerDaylightY, filter.daylight.transmission);
-                    element.innerHTML = `RGB 값: ${rgb}<br>HSV 값: ${RGBtoHSV(rgb)}`;
+                    element.innerHTML = `<div class="rgb-hsv-value">📊 RGB 값: ${rgb}</div><div class="rgb-hsv-value">🎨 HSV 값:<br>&nbsp;&nbsp;&nbsp;&nbsp;H: ${RGBtoHSV(rgb).h}°<br>&nbsp;&nbsp;&nbsp;&nbsp;S: ${RGBtoHSV(rgb).s}%<br>&nbsp;&nbsp;&nbsp;&nbsp;V: ${RGBtoHSV(rgb).v}%</div>`;
                 }
                 element.classList.remove('hidden');
             } else {
@@ -3948,7 +4002,7 @@
             S = Math.round(S * 100);
             V = Math.round(V * 100);
 
-            return `H: ${H}°, S: ${S}%, V: ${V}%`;
+            return { h: H, s: S, v: V };
         }
 
         function calculateLayers(layers) {
@@ -4085,6 +4139,10 @@
         }
 
         loadFavorites();
+
+        function showNotice() {
+            alert("RGB와 HSI 수치는\n조명기기의 종류나 브랜드에 따라\n같은 값이라도 색상이 다르게 보일 수 있습니다.\n\n색상을 일관되게 맞추고 싶다면,\nXY 수치를 사용하는 것이 좋습니다.\n\nXY 수치는 대부분의 조명기기에서\nDMX 모드로 지원되고 있습니다.");
+        }
     </script>
 </body>
 </html>
